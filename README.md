@@ -1,59 +1,155 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Task Management API (Modular Architecture)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is a robust REST API for a Task Management System built with Laravel 11. It strictly follows a Domain-Driven Design (DDD) inspired Modular Architecture, where features are grouped into modules (`Auth`, `Projects`, `Tasks`, `Dashboard`), utilizing the Repository Pattern and a unified Service Layer for error handling.
 
-## About Laravel
+## 🚀 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Modular Structure:** Code is organized by domain in `app/Modules`.
+- **Authentication:** Token-based authentication using Laravel Sanctum.
+- **Project Management:** Users can exclusively manage their own projects.
+- **Task Management:** Full CRUD operations with advanced dynamic filtering (`status`, `priority`, `title`) and pagination.
+- **Dashboard Statistics:** Provides comprehensive statistics about a user's projects and tasks (total, active, pending, completed, overdue).
+- **Background Jobs:** Automated scheduled queue jobs that notify users when a task becomes overdue.
+- **API Resources:** Standardized API responses with unified pagination structures.
+- **Centralized Error Handling:** Handled via a foundational `BaseService`.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠 Installation Steps
 
-## Learning Laravel
+Follow these steps to set up the project locally:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/zooma123/ElectroPiTask.git
+   cd ElectroPiTask
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. **Install Composer Dependencies**
+   ```bash
+   composer install
+   ```
 
-## Laravel Sponsors
+3. **Set up Environment File**
+   ```bash
+   cp .env.example .env
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+4. **Generate Application Key**
+   ```bash
+   php artisan key:generate
+   ```
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## ⚙️ Environment Setup
 
-## Contributing
+Update your `.env` file to match your local database configuration:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=root
+DB_PASSWORD=
 
-## Code of Conduct
+# Queue Setup for Background Jobs
+QUEUE_CONNECTION=database
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Once the `.env` file is ready, run the migrations and seeders:
 
-## Security Vulnerabilities
+```bash
+# Run database migrations and seed dummy data
+php artisan migrate:fresh --seed
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+To run the background queue worker for the notifications:
+```bash
+php artisan queue:work
+```
 
-## License
+To test the periodic command that dispatches the overdue task notifications:
+```bash
+php artisan tasks:check-overdue
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 📖 API Documentation
+
+The Postman base URL is typically: `http://localhost:8000/api`
+
+### 1. Authentication Module
+
+#### Register a new User
+- **Endpoint:** `POST /register`
+- **Body:** `name`, `email`, `password`
+- **Response:** User object + Sanctum API token.
+
+#### Login
+- **Endpoint:** `POST /login`
+- **Body:** `email`, `password`
+- **Response:** Sanctum API token.
+
+#### Logout
+- **Endpoint:** `POST /logout`
+- **Headers:** `Authorization: Bearer {token}`
+- **Response:** Success message.
+
+---
+
+### 2. Projects Module (Requires Bearer Token)
+
+#### List Projects
+- **Endpoint:** `GET /projects`
+- **Query Params:** `?per_page=15&sort_by=created_at&sort_order=desc`
+
+#### Create Project
+- **Endpoint:** `POST /projects`
+- **Body:** `name`, `description`, `status` (Active, Completed, Archived)
+
+#### View Project
+- **Endpoint:** `GET /projects/{id}`
+
+#### Update Project
+- **Endpoint:** `PUT /projects/{id}`
+- **Body:** `name`, `description`, `status`
+
+#### Delete Project
+- **Endpoint:** `DELETE /projects/{id}`
+
+---
+
+### 3. Tasks Module (Requires Bearer Token)
+
+#### List Tasks
+- **Endpoint:** `GET /tasks`
+- **Query Params:** 
+  - `status` (Todo, In Progress, Done)
+  - `priority` (Low, Medium, High)
+  - `title`
+  - `per_page`, `sort_by`, `sort_order`
+
+#### Create Task
+- **Endpoint:** `POST /tasks`
+- **Body:** `project_id`, `title`, `description`, `priority`, `status`, `due_date`
+
+#### View Task
+- **Endpoint:** `GET /tasks/{id}`
+
+#### Update Task
+- **Endpoint:** `PUT /tasks/{id}`
+- **Body:** fields to update.
+
+#### Delete Task
+- **Endpoint:** `DELETE /tasks/{id}`
+
+---
+
+### 4. Dashboard Module (Requires Bearer Token)
+
+#### View Statistics
+- **Endpoint:** `GET /dashboard`
+- **Response:** Returns `total_projects`, `active_projects`, `total_tasks`, `completed_tasks`, `pending_tasks`, `overdue_tasks`.
