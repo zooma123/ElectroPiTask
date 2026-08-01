@@ -1,51 +1,52 @@
 # Task Management API (Modular Architecture)
 
-This is a robust REST API for a Task Management System built with Laravel 11. It strictly follows a Domain-Driven Design (DDD) inspired Modular Architecture, where features are grouped into modules (`Auth`, `Projects`, `Tasks`, `Dashboard`), utilizing the Repository Pattern and a unified Service Layer for error handling.
-
-## 🚀 Features
-
-- **Modular Structure:** Code is organized by domain in `app/Modules`.
-- **Authentication:** Token-based authentication using Laravel Sanctum.
-- **Project Management:** Users can exclusively manage their own projects.
-- **Task Management:** Full CRUD operations with advanced dynamic filtering (`status`, `priority`, `title`) and pagination.
-- **Dashboard Statistics:** Provides comprehensive statistics about a user's projects and tasks (total, active, pending, completed, overdue).
-- **Background Jobs:** Automated scheduled queue jobs that notify users when a task becomes overdue.
-- **API Resources:** Standardized API responses with unified pagination structures.
-- **Centralized Error Handling:** Handled via a foundational `BaseService`.
+Welcome to the **Task Management API**, a highly robust, scalable, and fully featured RESTful API built with **Laravel 11**. This project strictly adheres to professional software engineering standards, specifically utilizing a Domain-Driven Design (DDD) inspired Modular Architecture.
 
 ---
 
-## 🛠 Installation Steps
+## 🌟 Key Features
 
-Follow these steps to set up the project locally:
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/zooma123/ElectroPiTask.git
-   cd ElectroPiTask
-   ```
-
-2. **Install Composer Dependencies**
-   ```bash
-   composer install
-   ```
-
-3. **Set up Environment File**
-   ```bash
-   cp .env.example .env
-   ```
-
-4. **Generate Application Key**
-   ```bash
-   php artisan key:generate
-   ```
+- **Modular Architecture:** The codebase is logically divided into self-contained modules (`Auth`, `Projects`, `Tasks`, `Dashboard`) inside the `app/Modules` directory, ensuring separation of concerns and high maintainability.
+- **Advanced Design Patterns:** Implements the **Repository Pattern** for database interactions and a **Service Layer** for business logic, managed centrally by a `BaseService` for unified error handling.
+- **Authentication & Security:** Uses **Laravel Sanctum** for secure token-based API authentication. All operations are strictly scope-limited so users can only view and modify their own projects and tasks.
+- **Dynamic Filtering & Pagination:** Endpoints support dynamic filtering (e.g., `?status=Todo&priority=High`), sorting (`sort_by`, `sort_order`), and pagination (`per_page`), utilizing eager loading to prevent N+1 query performance issues.
+- **Background Jobs & Notifications:** Automated scheduled Queue Jobs to detect overdue tasks and dispatch email/database notifications using Laravel's Queue system.
+- **Automated Testing Suite:** Comprehensive **Feature Tests** ensuring 100% reliability for all endpoints, utilizing `DatabaseTransactions` to run safely against real databases without data loss.
+- **Standardized Responses:** Employs Laravel API Resources and Collections to guarantee a consistent JSON response structure (including metadata and pagination links).
+- **Postman Collection Included:** A ready-to-use `PostmanCollection.json` file is bundled with the project for immediate testing.
 
 ---
 
-## ⚙️ Environment Setup
+## 🛠 System Requirements
 
-Update your `.env` file to match your local database configuration:
+- PHP 8.2 or higher
+- Composer 2.x
+- MySQL (or MariaDB)
+- Git
 
+---
+
+## 🚀 Installation & Setup
+
+Follow these steps to get the project up and running locally:
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/zooma123/ElectroPiTask.git
+cd ElectroPiTask
+```
+
+### 2. Install Dependencies
+```bash
+composer install
+```
+
+### 3. Environment Configuration
+Duplicate the `.env.example` file to create your local environment settings:
+```bash
+cp .env.example .env
+```
+Open the `.env` file and configure your database settings:
 ```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -54,102 +55,89 @@ DB_DATABASE=your_database_name
 DB_USERNAME=root
 DB_PASSWORD=
 
-# Queue Setup for Background Jobs
+# Required for Background Jobs
 QUEUE_CONNECTION=database
+
+# Recommended for testing emails locally
+MAIL_MAILER=log 
 ```
 
-Once the `.env` file is ready, run the migrations and seeders:
-
+### 4. Generate Application Key
 ```bash
-# Run database migrations and seed dummy data
+php artisan key:generate
+```
+
+### 5. Run Migrations & Seed Dummy Data
+This command will create all necessary tables (including the `jobs` table for queues) and populate the database with test users, projects, and tasks.
+```bash
 php artisan migrate:fresh --seed
 ```
 
-To run the background queue worker for the notifications:
+---
+
+## ⚙️ Background Jobs (Overdue Notifications)
+
+The system automatically checks for overdue tasks and sends notifications to project owners. To make this work locally, you need to run two terminal commands (each in a separate terminal window):
+
+1. **Start the Queue Worker:** (This processes the dispatched notification jobs)
 ```bash
 php artisan queue:work
 ```
 
-To test the periodic command that dispatches the overdue task notifications:
+2. **Start the Scheduler:** (This triggers the daily check for overdue tasks at 09:00 AM)
 ```bash
-php artisan tasks:check-overdue
+php artisan schedule:work
+```
+*(Alternatively, you can manually trigger the check anytime by running: `php artisan tasks:check-overdue`)*
+
+---
+
+## 🧪 Automated Testing
+
+The project includes a robust suite of Feature tests located in `tests/Feature/`. 
+These tests use the `DatabaseTransactions` trait, meaning **they are 100% safe to run on your local MySQL database**. They will insert test data, run the assertions, and immediately rollback the changes without affecting your actual data.
+
+To run the tests:
+```bash
+php artisan test
 ```
 
 ---
 
-## 📖 API Documentation
+## 📮 Postman Collection
 
-The Postman base URL is typically: `http://localhost:8000/api`
-
-### 1. Authentication Module
-
-#### Register a new User
-- **Endpoint:** `POST /register`
-- **Body:** `name`, `email`, `password`
-- **Response:** User object + Sanctum API token.
-
-#### Login
-- **Endpoint:** `POST /login`
-- **Body:** `email`, `password`
-- **Response:** Sanctum API token.
-
-#### Logout
-- **Endpoint:** `POST /logout`
-- **Headers:** `Authorization: Bearer {token}`
-- **Response:** Success message.
+For your convenience, a complete Postman Collection is included.
+1. Open **Postman**.
+2. Click **Import** and select the `PostmanCollection.json` file located in the root directory of this project.
+3. The collection is pre-configured with a `{{base_url}}` variable pointing to `http://localhost:8000/api`.
+4. **Important:** After you hit the `Login` endpoint, copy the returned token and paste it into the Collection's Variables tab under the `token` variable. All other requests will automatically use this token!
 
 ---
 
-### 2. Projects Module (Requires Bearer Token)
+## 📖 API Documentation Reference
 
-#### List Projects
-- **Endpoint:** `GET /projects`
-- **Query Params:** `?per_page=15&sort_by=created_at&sort_order=desc`
+*Base URL: `http://localhost:8000/api`*
 
-#### Create Project
-- **Endpoint:** `POST /projects`
-- **Body:** `name`, `description`, `status` (Active, Completed, Archived)
+### 1. Authentication (Public)
+- **POST `/register`**: Registers a new user. Requires `name`, `email`, `password`.
+- **POST `/login`**: Authenticates a user. Requires `email`, `password`. Returns Bearer Token.
 
-#### View Project
-- **Endpoint:** `GET /projects/{id}`
+### 2. Projects (Requires Bearer Token)
+- **GET `/projects`**: Lists all projects owned by the authenticated user.
+  - *Query Params:* `per_page`, `sort_by`, `sort_order`.
+- **POST `/projects`**: Creates a new project. Requires `name`. Optional `description`, `status`.
+- **GET `/projects/{id}`**: Retrieves details of a specific project.
+- **PUT `/projects/{id}`**: Updates a project.
+- **DELETE `/projects/{id}`**: Deletes a project.
 
-#### Update Project
-- **Endpoint:** `PUT /projects/{id}`
-- **Body:** `name`, `description`, `status`
+### 3. Tasks (Requires Bearer Token)
+- **GET `/tasks`**: Lists all tasks.
+  - *Query Params:* `status` (Todo, In Progress, Done), `priority` (Low, Medium, High), `title` (Search).
+- **POST `/tasks`**: Creates a new task. Requires `project_id` (must belong to user), `title`. Optional `priority`, `status`, `due_date`.
+- **GET `/tasks/{id}`**: Retrieves a specific task.
+- **PUT `/tasks/{id}`**: Updates a task.
+- **DELETE `/tasks/{id}`**: Deletes a task.
 
-#### Delete Project
-- **Endpoint:** `DELETE /projects/{id}`
-
----
-
-### 3. Tasks Module (Requires Bearer Token)
-
-#### List Tasks
-- **Endpoint:** `GET /tasks`
-- **Query Params:** 
-  - `status` (Todo, In Progress, Done)
-  - `priority` (Low, Medium, High)
-  - `title`
-  - `per_page`, `sort_by`, `sort_order`
-
-#### Create Task
-- **Endpoint:** `POST /tasks`
-- **Body:** `project_id`, `title`, `description`, `priority`, `status`, `due_date`
-
-#### View Task
-- **Endpoint:** `GET /tasks/{id}`
-
-#### Update Task
-- **Endpoint:** `PUT /tasks/{id}`
-- **Body:** fields to update.
-
-#### Delete Task
-- **Endpoint:** `DELETE /tasks/{id}`
-
----
-
-### 4. Dashboard Module (Requires Bearer Token)
-
-#### View Statistics
-- **Endpoint:** `GET /dashboard`
-- **Response:** Returns `total_projects`, `active_projects`, `total_tasks`, `completed_tasks`, `pending_tasks`, `overdue_tasks`.
+### 4. Dashboard (Requires Bearer Token)
+- **GET `/dashboard`**: Returns a JSON object with statistical metrics:
+  - `total_projects`, `active_projects`, `total_tasks`, `completed_tasks`, `pending_tasks`, `overdue_tasks`.
