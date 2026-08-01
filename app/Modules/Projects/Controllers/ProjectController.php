@@ -29,7 +29,7 @@ class ProjectController extends Controller
             return response()->json(['error' => $service->getError()], $service->getErrorCode());
         }
 
-        return new ProjectCollection($service->getData());
+        return (new ProjectCollection($service->getData()))->response()->setStatusCode(200);
     }
 
     public function store(StoreProjectRequest $request): JsonResponse|ProjectResource
@@ -51,7 +51,7 @@ class ProjectController extends Controller
             return response()->json(['error' => $service->getError()], $service->getErrorCode());
         }
 
-        return new ProjectResource($service->getData());
+        return (new ProjectResource($service->getData()))->response()->setStatusCode(200);
     }
 
     public function update(UpdateProjectRequest $request, int $id): JsonResponse|ProjectResource
@@ -62,7 +62,7 @@ class ProjectController extends Controller
             return response()->json(['error' => $service->getError()], $service->getErrorCode());
         }
 
-        return new ProjectResource($service->getData());
+        return (new ProjectResource($service->getData()))->response()->setStatusCode(200);
     }
 
     public function destroy(int $id): JsonResponse

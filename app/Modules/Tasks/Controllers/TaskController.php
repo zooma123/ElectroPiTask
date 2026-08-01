@@ -29,7 +29,7 @@ class TaskController extends Controller
             return response()->json(['error' => $service->getError()], $service->getErrorCode());
         }
 
-        return new TaskCollection($service->getData());
+        return (new TaskCollection($service->getData()))->response()->setStatusCode(200);
     }
 
     public function store(StoreTaskRequest $request): JsonResponse|TaskResource
@@ -51,7 +51,7 @@ class TaskController extends Controller
             return response()->json(['error' => $service->getError()], $service->getErrorCode());
         }
 
-        return new TaskResource($service->getData());
+        return (new TaskResource($service->getData()))->response()->setStatusCode(200);
     }
 
     public function destroy(int $id): JsonResponse
